@@ -430,7 +430,7 @@ export function HomeTab() {
                 </button>
 
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  🎯 Today&apos;s Word Guessed!
+                  🎯 Today&apos;s Word!
                 </h2>
 
                 <p className="text-lg mb-6 text-gray-600 dark:text-gray-300">
