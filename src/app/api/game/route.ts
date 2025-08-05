@@ -5,14 +5,16 @@ import UserStats from "../../../lib/models/UserStats";
 
 // Helper function to get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
-  return new Date().toISOString().split("T")[0];
+  // return new Date().toISOString().split("T")[0];
+  return new Date().toLocaleDateString("en-CA");
 }
 
 // Helper function to get yesterday's date
 function getYesterdayDate(): string {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split("T")[0];
+  // return yesterday.toISOString().split("T")[0];
+  return yesterday.toLocaleDateString("en-CA");
 }
 
 // GET: Get current game state for user
