@@ -14,9 +14,10 @@
     "tagline": "Test your vocab in 6 tries",
     "ogDescription": "Test your vocabulary in 6 tries"
   },
+
   "accountAssociation": {
     "header": "eyJmaWQiOjY3MzEyNiwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDQ2RkU3ZDUxRTNiOTA4MENDY0VDMTJBNjc1ZjYzQzg5MkEyYzBEM0YifQ",
-    "payload": "eyJkb21haW4iOiIifQ",
-    "signature": "jWN3nAlRPyhkHWsv7fnfr6eCsUGqM5RVnaa+ktkCJEkhqj4qjUyiVAwBn3gc/FPrDkOuRDahUow573Q55XwfDhs="
+    "payload": "eyJkb21haW4iOiJtaW5pd29yZGxlLnZlcmNlbC5hcHAifQ",
+    "signature": "dw2XW305SzhPhOcPlp5SpDAJnPzMNTfl8bm8QYSJrT4rkw6YjrlEMCHwhdN2Vm5PNVNfsKB92/2aGZV4gES0MBs="
   }
 }
