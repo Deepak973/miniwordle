@@ -1,24 +1,716 @@
 "use client";
 
-/**
- * HomeTab component displays the main landing content for the mini app.
- * 
- * This is the default tab that users see when they first open the mini app.
- * It provides a simple welcome message and placeholder content that can be
- * customized for specific use cases.
- * 
- * @example
- * ```tsx
- * <HomeTab />
- * ```
- */
+import { useState, useEffect } from "react";
+import classNames from "classnames";
+// Remove the DICTIONARY import
+// import { DICTIONARY } from "../../../lib/mockDictonary";
+import { Keyboard } from "../Keyboard";
+import { useGame } from "../../../hooks/useGame";
+import { useDailyWord } from "../../../hooks/useDailyWord";
+import { StatsDisplay } from "../StatsDisplay";
+import { useMiniApp } from "@neynar/react";
+import { ShareButton } from "../Share";
+import { APP_URL } from "~/lib/constants";
+import { GameRules } from "../GameRules";
+import { isValidWord } from "../../../lib/utils";
+
+const NUM_ROWS = 6;
+const WORD_LENGTH = 5;
+
+// Dictionary for word validation
+
+function getLetterStatus(guess: string, answer: string) {
+  // Returns an array of: "correct" | "present" | "absent"
+  const result: ("correct" | "present" | "absent")[] =
+    Array(WORD_LENGTH).fill("absent");
+  const answerArr = answer.split("");
+  const guessArr = guess.split("");
+  const used = Array(WORD_LENGTH).fill(false);
+
+  // First pass: correct positions
+  for (let i = 0; i < WORD_LENGTH; i++) {
+    if (guessArr[i] === answerArr[i]) {
+      result[i] = "correct";
+      used[i] = true;
+      answerArr[i] = ""; // Mark as used
+    }
+  }
+  // Second pass: present but not in correct position
+  for (let i = 0; i < WORD_LENGTH; i++) {
+    if (result[i] === "correct") continue;
+    const idx = answerArr.findIndex((ch, j) => ch === guessArr[i] && !used[j]);
+    if (idx !== -1) {
+      result[i] = "present";
+      used[idx] = true;
+      answerArr[idx] = ""; // Mark as used
+    }
+  }
+  return result;
+}
+
 export function HomeTab() {
-  return (
-    <div className="flex items-center justify-center h-[calc(100vh-200px)] px-6">
-      <div className="text-center w-full max-w-md mx-auto">
-        <p className="text-lg mb-2">Put your content here!</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Powered by Neynar 🪐</p>
+  // Generate a unique user ID (in a real app, this would come from authentication)
+  const { context } = useMiniApp();
+  const userId = context?.user?.fid?.toString() || "";
+
+  // Use the game hook for MongoDB integration
+  const {
+    game,
+    stats,
+    loading,
+    error: gameError,
+    saveGuess,
+    completeGame,
+  } = useGame(userId);
+
+  // Fetch daily word
+  const {
+    dailyWord,
+    loading: dailyWordLoading,
+    error: dailyWordError,
+  } = useDailyWord();
+
+  const [currentGuess, setCurrentGuess] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+
+  const [gameCompleted, setGameCompleted] = useState<boolean>(false);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [gameStartTime, setGameStartTime] = useState<Date>(new Date());
+
+  const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [flippingRow, setFlippingRow] = useState<number | null>(null);
+
+  // Add state for tracking which cells should shake
+  const [shakingCells, setShakingCells] = useState<Set<string>>(new Set());
+
+  const [showCompletedPopup, setShowCompletedPopup] = useState<boolean>(false);
+  const [showRules, setShowRules] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+
+  useEffect(() => {
+    setGameStartTime(new Date());
+  }, []);
+
+  // Calculate letter statuses for keyboard
+  const getLetterStatuses = () => {
+    const letterStatuses: Record<string, "correct" | "present" | "absent"> = {};
+
+    // Process all guesses to determine final status for each letter
+    game.guesses.forEach((guess: string, guessIndex: number) => {
+      const guessStatuses = game.statuses[guessIndex];
+      guess.split("").forEach((letter: string, letterIndex: number) => {
+        const status = guessStatuses[letterIndex];
+        const currentStatus = letterStatuses[letter];
+
+        // Priority: correct > present > absent
+        if (!currentStatus) {
+          letterStatuses[letter] = status;
+        } else if (status === "correct") {
+          letterStatuses[letter] = "correct";
+        } else if (status === "present" && currentStatus === "absent") {
+          letterStatuses[letter] = "present";
+        }
+        // If current status is "correct" or "present", don't downgrade to "absent"
+      });
+    });
+
+    return letterStatuses;
+  };
+
+  const handleKeyPress = (key: string) => {
+    if (
+      game.guesses.length >= NUM_ROWS ||
+      gameCompleted ||
+      gameOver ||
+      isSubmitting ||
+      game.completed
+    )
+      return;
+    if (currentGuess.length < WORD_LENGTH) {
+      const newGuess = currentGuess + key;
+      setCurrentGuess(newGuess);
+
+      // Add shake effect for the new letter
+      const cellKey = `${game.guesses.length}-${newGuess.length - 1}`;
+      setShakingCells((prev) => new Set([...prev, cellKey]));
+
+      // Remove shake effect after animation completes
+      setTimeout(() => {
+        setShakingCells((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(cellKey);
+          return newSet;
+        });
+      }, 500);
+
+      setError(null);
+      setShowError(false);
+    }
+  };
+
+  const handleEnter = async () => {
+    if (
+      game.guesses.length >= NUM_ROWS ||
+      gameCompleted ||
+      gameOver ||
+      isSubmitting
+    )
+      return;
+
+    // Check if word is complete
+    if (currentGuess.length < WORD_LENGTH) {
+      setError("Not enough letters");
+      setShowError(true);
+      setIsShaking(true);
+
+      // Hide error message after 2 seconds
+      setTimeout(() => {
+        setShowError(false);
+        setError(null);
+      }, 2000);
+
+      // Stop shake animation after 500ms
+      setTimeout(() => {
+        setIsShaking(false);
+      }, 250);
+
+      return;
+    }
+
+    if (currentGuess.length === WORD_LENGTH) {
+      // Check if word exists using the API
+      const wordExists = await isValidWord(currentGuess);
+
+      if (!wordExists) {
+        setError("Not in dictionary");
+        setShowError(true);
+        setIsShaking(true);
+
+        // Hide error message after 2 seconds
+        setTimeout(() => {
+          setShowError(false);
+          setError(null);
+        }, 2000);
+
+        // Stop shake animation after 500ms
+        setTimeout(() => {
+          setIsShaking(false);
+        }, 250);
+
+        return;
+      }
+
+      // Prevent duplicate submissions
+      setIsSubmitting(true);
+      setError(null);
+      setShowError(false);
+
+      const newGuess = currentGuess.toUpperCase();
+      const newStatuses = getLetterStatus(newGuess, dailyWord || "");
+
+      // Clear current guess immediately to prevent duplicates
+      setCurrentGuess("");
+
+      // Start flip animation
+      setFlippingRow(game.guesses.length);
+
+      // Save guess to MongoDB
+      await saveGuess(newGuess, newStatuses);
+
+      // Wait for flip animation to complete (2.5 seconds for 5 letters)
+      setTimeout(() => {
+        setFlippingRow(null);
+        setIsSubmitting(false);
+
+        // Check if the word is correct
+        if (newGuess === dailyWord) {
+          const endTime = new Date();
+          const timeDiff = Math.floor(
+            (endTime.getTime() - gameStartTime.getTime()) / 1000
+          );
+
+          setGameCompleted(true);
+          completeGame(true, timeDiff);
+        } else if (game.guesses.length + 1 >= NUM_ROWS) {
+          // Game over - all attempts used
+          const endTime = new Date();
+          const timeDiff = Math.floor(
+            (endTime.getTime() - gameStartTime.getTime()) / 1000
+          );
+
+          setGameOver(true);
+          completeGame(false, timeDiff);
+        }
+      }, 2500);
+    }
+  };
+
+  const handleBackspace = () => {
+    if (gameCompleted || gameOver || isSubmitting) return;
+    setCurrentGuess((prev) => prev.slice(0, -1));
+    setError(null);
+    setShowError(false);
+  };
+
+  // Keyboard handler for physical keyboard
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        game.guesses.length >= NUM_ROWS ||
+        gameCompleted ||
+        gameOver ||
+        isSubmitting
+      )
+        return;
+      if (e.key === "Enter") {
+        handleEnter();
+      } else if (e.key === "Backspace") {
+        handleBackspace();
+      } else if (
+        /^[a-zA-Z]$/.test(e.key) &&
+        currentGuess.length < WORD_LENGTH
+      ) {
+        handleKeyPress(e.key.toUpperCase());
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    currentGuess,
+    game.guesses,
+    game.statuses,
+    gameCompleted,
+    gameOver,
+    isSubmitting,
+    handleBackspace,
+    handleEnter,
+    handleKeyPress,
+  ]);
+
+  const letterStatuses = getLetterStatuses();
+
+  // Show completed game popup if game is completed
+  useEffect(() => {
+    if (game.completed) {
+      setShowCompletedPopup(true);
+    }
+  }, [game.completed]);
+
+  // Format time for display
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
+  };
+
+  // Show loading state
+  if (loading || dailyWordLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
+        <div className="flex items-center space-x-3">
+          <svg
+            className="w-6 h-6 text-gray-700 dark:text-white animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            />
+          </svg>
+          <span className="text-lg font-semibold text-gray-800 dark:text-white">
+            Loading game...
+          </span>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  // Show error state
+  if (gameError || dailyWordError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
+        <div className="text-red-500 mb-4">
+          Error: {gameError || dailyWordError}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Show error if no daily word is available
+  if (!dailyWord) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
+        <div className="text-red-500 mb-4">No daily word available</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 z-30 px-4 py-3">
+        <div className="flex justify-between items-center max-w-5xl mx-auto">
+          {/* Game Rules Button - Left */}
+          <button
+            onClick={() => setShowRules(true)}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+            Rules
+          </button>
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowStats(true)}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              Stats
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Main Content */}
+      <div className="min-h-screen bg-white dark:bg-black pt-20 pb-32">
+        <div className="flex flex-col items-center justify-start p-4">
+          {/* Completed Game Popup */}
+          {showCompletedPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4 text-center relative">
+                {/* Close button */}
+                <button
+                  onClick={() => setShowCompletedPopup(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </button>
+
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                  🎯 Today&apos;s Game Complete!
+                </h2>
+
+                <p className="text-lg mb-6 text-gray-600 dark:text-gray-300">
+                  You have played today&apos;s game. Come back tomorrow to guess
+                  a new word! The word was {dailyWord}
+                </p>
+
+                {/* Game Result */}
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                  <div className="text-lg font-semibold mb-2">
+                    {game.won ? (
+                      <span className="text-green-600">🎉 You Won!</span>
+                    ) : (
+                      <span className="text-red-600">😔 Game Over</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Attempts: {game.attempts}/6
+                    {game.timeTaken > 0 && (
+                      <span className="ml-4">
+                        Time: {formatTime(game.timeTaken)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCompletedPopup(false)}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded transition-colors"
+                  >
+                    Got it!
+                  </button>
+                  {game.won && (
+                    <ShareButton
+                      buttonText="Share"
+                      cast={{
+                        text: `I guessed today's word in ${
+                          game.attempts
+                        } attempts! and it took me ${formatTime(
+                          game.timeTaken
+                        )} to complete !`,
+                        bestFriends: true,
+                        embeds: [
+                          `${APP_URL}/share/${context?.user?.fid || ""}`,
+                        ],
+                      }}
+                      className="flex-1"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error message at the top of the board */}
+          <div className="h-12 w-full max-w-xs mb-4 flex items-center justify-center">
+            {showError && error && (
+              <div className="animate-slide-down bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg text-center">
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className="w-full max-w-xs grid grid-rows-6 gap-1">
+            {[...Array(NUM_ROWS)].map((_, rowIndex) => {
+              const word =
+                rowIndex < game.guesses.length
+                  ? game.guesses[rowIndex]
+                  : rowIndex === game.guesses.length
+                  ? currentGuess
+                  : "";
+              const rowStatus =
+                rowIndex < game.statuses.length ? game.statuses[rowIndex] : [];
+              const isCurrentRow = rowIndex === game.guesses.length;
+              const isFlipping = flippingRow === rowIndex;
+
+              return (
+                <div
+                  key={rowIndex}
+                  className={classNames("grid grid-cols-5 gap-1", {
+                    "animate-shake": isShaking && isCurrentRow,
+                  })}
+                >
+                  {[...Array(WORD_LENGTH)].map((_, colIndex) => {
+                    const cellStatus = rowStatus[colIndex] || "";
+                    const isFlippingCell = isFlipping && colIndex < word.length;
+                    const cellKey = `${rowIndex}-${colIndex}`;
+                    const isShakingCell = shakingCells.has(cellKey);
+
+                    return (
+                      <div
+                        key={colIndex}
+                        className={classNames(
+                          "w-full aspect-square border-2 text-center font-bold text-xl uppercase flex items-center justify-center transition-all duration-500",
+                          {
+                            "bg-green-500 text-white border-green-600":
+                              cellStatus === "correct",
+                            "bg-yellow-400 text-white border-yellow-500":
+                              cellStatus === "present",
+                            "bg-gray-300 dark:bg-gray-700 text-black dark:text-white border-gray-400 dark:border-gray-600":
+                              cellStatus === "absent" && word[colIndex],
+                            "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-700":
+                              !cellStatus,
+                            "animate-flip": isFlippingCell,
+                            "animate-cell-shake": isShakingCell,
+                          }
+                        )}
+                        style={{
+                          animationDelay: isFlippingCell
+                            ? `${colIndex * 300}ms`
+                            : "0ms",
+                          animationFillMode: isFlippingCell
+                            ? "forwards"
+                            : "none",
+                        }}
+                      >
+                        {word[colIndex] || ""}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+
+          {game.won && (
+            <>
+              <div className="text-center text-gray-600 dark:text-gray-400 mb-4">
+                You guessed today&apos;s word. Come again tomorrow to continue
+                your streak!
+              </div>
+              <div className="flex justify-center w-full max-w-xs">
+                <ShareButton
+                  buttonText="Share"
+                  cast={{
+                    text: `I guessed today's word in ${
+                      game.attempts
+                    } attempts! and it took me ${formatTime(
+                      game.timeTaken
+                    )} to complete `,
+                    bestFriends: true,
+                    embeds: [`${APP_URL}/share/${context?.user?.fid || ""}`],
+                  }}
+                  className="flex-1"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Fixed Keyboard at bottom */}
+      <Keyboard
+        onKeyPress={handleKeyPress}
+        onEnter={handleEnter}
+        onBackspace={handleBackspace}
+        letterStatuses={letterStatuses}
+      />
+
+      <style jsx>{`
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          10%,
+          30%,
+          50%,
+          70%,
+          90% {
+            transform: translateX(-5px);
+          }
+          20%,
+          40%,
+          60%,
+          80% {
+            transform: translateX(5px);
+          }
+        }
+
+        @keyframes cell-shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          10%,
+          30%,
+          50%,
+          70%,
+          90% {
+            transform: translateX(-3px);
+          }
+          20%,
+          40%,
+          60%,
+          80% {
+            transform: translateX(3px);
+          }
+        }
+
+        @keyframes slide-down {
+          0% {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          20% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          80% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+        }
+
+        @keyframes slide-up {
+          0% {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          20% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          80% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+        }
+
+        @keyframes flip {
+          0% {
+            transform: rotateX(0deg);
+          }
+          49.99% {
+            transform: rotateX(90deg);
+          }
+          50% {
+            transform: rotateX(90deg);
+            background-color: inherit; /* Or set to the correct mid-flip color */
+          }
+          100% {
+            transform: rotateX(0deg);
+          }
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+
+        .animate-cell-shake {
+          animation: cell-shake 0.5s ease-in-out;
+        }
+
+        .animate-slide-down {
+          animation: slide-down 2s ease-in-out;
+        }
+
+        .animate-slide-up {
+          animation: slide-up 2s ease-in-out;
+        }
+
+        .animate-flip {
+          animation: flip 0.6s linear;
+          animation-fill-mode: forwards;
+          transform-style: preserve-3d;
+        }
+      `}</style>
+
+      {/* Game Rules Modal */}
+      {showRules && <GameRules onClose={() => setShowRules(false)} />}
+      {showStats && (
+        <StatsDisplay
+          onClose={() => setShowStats(false)}
+          currentStreak={stats.currentStreak}
+          maxStreak={stats.maxStreak}
+          gamesPlayed={stats.gamesPlayed}
+          gamesWon={stats.gamesWon}
+          winRate={stats.winRate}
+          averageAttempts={stats.averageAttempts}
+        />
+      )}
+    </>
   );
-} 
+}
