@@ -430,12 +430,15 @@ export function HomeTab() {
                 </button>
 
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  🎯 Today&apos;s Game Complete!
+                  🎯 Today&apos;s Word Guessed!
                 </h2>
 
                 <p className="text-lg mb-6 text-gray-600 dark:text-gray-300">
                   You have played today&apos;s game. Come back tomorrow to guess
-                  a new word! The word was {dailyWord}
+                  a new word! The word was{" "}
+                  <span className="font-bold text-purple-500 bg-yellow-200 dark:bg-yellow-600 px-2 rounded">
+                    {dailyWord}
+                  </span>
                 </p>
 
                 {/* Game Result */}
