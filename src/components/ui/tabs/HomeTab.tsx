@@ -385,6 +385,17 @@ export function HomeTab() {
           >
             Rules
           </button>
+
+          {/* Logo - Center */}
+          <div className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="Wordle Mini App Logo"
+              className="h-20 w-20"
+            />
+          </div>
+
+          {/* Stats Button - Right */}
           <div className="flex items-center">
             <button
               onClick={() => setShowStats(true)}
