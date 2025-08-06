@@ -210,8 +210,8 @@ export function HomeTab() {
       const newGuess = currentGuess.toUpperCase();
       const newStatuses = getLetterStatus(newGuess, dailyWord || "");
 
-      // Clear current guess immediately to prevent duplicates
-      setCurrentGuess("");
+      // Don't clear currentGuess immediately - keep it visible during animation
+      // setCurrentGuess(""); // Remove this line
 
       // Start flip animation
       setFlippingRow(game.guesses.length);
@@ -223,6 +223,8 @@ export function HomeTab() {
       setTimeout(() => {
         setFlippingRow(null);
         setIsSubmitting(false);
+        // Clear current guess after animation completes
+        setCurrentGuess("");
 
         // Check if the word is correct
         if (newGuess === dailyWord) {
