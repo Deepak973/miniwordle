@@ -81,7 +81,6 @@ export function HomeTab() {
   const [showError, setShowError] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [flippingRow, setFlippingRow] = useState<number | null>(null);
-  const [revealedCells, setRevealedCells] = useState<Set<string>>(new Set());
 
   // Add state for tracking which cells should shake
   const [shakingCells, setShakingCells] = useState<Set<string>>(new Set());
@@ -93,21 +92,6 @@ export function HomeTab() {
   useEffect(() => {
     setGameStartTime(new Date());
   }, []);
-
-  useEffect(() => {
-    if (flippingRow !== null) {
-      for (let colIndex = 0; colIndex < WORD_LENGTH; colIndex++) {
-        const cellKey = `${flippingRow}-${colIndex}`;
-        setTimeout(() => {
-          setRevealedCells((prev) => {
-            const updated = new Set(prev);
-            updated.add(cellKey);
-            return updated;
-          });
-        }, colIndex * 300 + 300); // 300ms per flip + buffer
-      }
-    }
-  }, [flippingRow]);
 
   // Calculate letter statuses for keyboard
   const getLetterStatuses = () => {
@@ -227,7 +211,7 @@ export function HomeTab() {
       const newStatuses = getLetterStatus(newGuess, dailyWord || "");
 
       // Clear current guess immediately to prevent duplicates
-      // setCurrentGuess("");
+      setCurrentGuess("");
 
       // Start flip animation
       setFlippingRow(game.guesses.length);
@@ -261,7 +245,6 @@ export function HomeTab() {
         }
       }, 2500);
     }
-    setCurrentGuess("");
   };
 
   const handleBackspace = () => {
@@ -547,24 +530,16 @@ export function HomeTab() {
                         className={classNames(
                           "w-full aspect-square border-2 text-center font-bold text-xl uppercase flex items-center justify-center transition-all duration-500",
                           {
+                            "bg-green-500 text-white border-green-600":
+                              cellStatus === "correct",
+                            "bg-yellow-400 text-white border-yellow-500":
+                              cellStatus === "present",
+                            "bg-gray-300 dark:bg-gray-700 text-black dark:text-white border-gray-400 dark:border-gray-600":
+                              cellStatus === "absent" && word[colIndex],
+                            "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-700":
+                              !cellStatus,
                             "animate-flip": isFlippingCell,
                             "animate-cell-shake": isShakingCell,
-
-                            // ✅ Show colored backgrounds only after flip is revealed
-                            "bg-green-500 text-white border-green-600":
-                              cellStatus === "correct" &&
-                              revealedCells.has(cellKey),
-                            "bg-yellow-400 text-white border-yellow-500":
-                              cellStatus === "present" &&
-                              revealedCells.has(cellKey),
-                            "bg-gray-300 dark:bg-gray-700 text-black dark:text-white border-gray-400 dark:border-gray-600":
-                              cellStatus === "absent" &&
-                              word[colIndex] &&
-                              revealedCells.has(cellKey),
-
-                            // Before reveal, default background
-                            "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-700":
-                              !revealedCells.has(cellKey),
                           }
                         )}
                         style={{
