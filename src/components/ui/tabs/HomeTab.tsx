@@ -81,6 +81,7 @@ export function HomeTab() {
   const [showError, setShowError] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [flippingRow, setFlippingRow] = useState<number | null>(null);
+  const [submittingGuess, setSubmittingGuess] = useState<string>("");
 
   // Add state for tracking which cells should shake
   const [shakingCells, setShakingCells] = useState<Set<string>>(new Set());
@@ -210,8 +211,9 @@ export function HomeTab() {
       const newGuess = currentGuess.toUpperCase();
       const newStatuses = getLetterStatus(newGuess, dailyWord || "");
 
-      // Don't clear currentGuess immediately - keep it visible during animation
-      // setCurrentGuess(""); // Remove this line
+      // Store the submitting guess and clear current guess immediately
+      setSubmittingGuess(newGuess);
+      setCurrentGuess("");
 
       // Start flip animation
       setFlippingRow(game.guesses.length);
@@ -223,8 +225,8 @@ export function HomeTab() {
       setTimeout(() => {
         setFlippingRow(null);
         setIsSubmitting(false);
-        // Clear current guess after animation completes
-        setCurrentGuess("");
+        // Clear submitting guess after animation completes
+        setSubmittingGuess("");
 
         // Check if the word is correct
         if (newGuess === dailyWord) {
@@ -505,8 +507,10 @@ export function HomeTab() {
               const word =
                 rowIndex < game.guesses.length
                   ? game.guesses[rowIndex]
-                  : rowIndex === game.guesses.length
+                  : rowIndex === game.guesses.length && !isSubmitting
                   ? currentGuess
+                  : rowIndex === flippingRow
+                  ? submittingGuess
                   : "";
               const rowStatus =
                 rowIndex < game.statuses.length ? game.statuses[rowIndex] : [];
