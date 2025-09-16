@@ -400,23 +400,7 @@ export function HomeTab() {
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 bg-amber-50/80 dark:bg-neutral-900/80 backdrop-blur border-b border-amber-200/60 dark:border-neutral-800 z-30 px-4 py-2">
         <div className="flex justify-between items-center max-w-5xl mx-auto">
-          {/* Game Rules Button - Left */}
-          <button
-            onClick={() => setShowRules(true)}
-            className="hidden sm:inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
-            aria-label="Open rules"
-            title="Rules"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="currentColor"
-            >
-              <path d="M4 4h10a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a4 4 0 0 1-4-4V6a2 2 0 0 1 2-2zm2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8V8a2 2 0 0 0-2-2H6zm10 0h2a2 2 0 0 1 2 2v10h-2V8a4 4 0 0 0-2-2z" />
-            </svg>
-          </button>
+          <div className="w-10" />
 
           {/* Title - Center */}
           <div className="flex flex-col items-center select-none">
@@ -435,6 +419,22 @@ export function HomeTab() {
 
           {/* Stats Button - Right */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowRules(true)}
+              className="inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
+              aria-label="Open rules"
+              title="Rules"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path d="M4 4h10a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a4 4 0 0 1-4-4V6a2 2 0 0 1 2-2zm2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8V8a2 2 0 0 0-2-2H6zm10 0h2a2 2 0 0 1 2 2v10h-2V8a4 4 0 0 0-2-2z" />
+              </svg>
+            </button>
             <button
               onClick={() => setShowStats(true)}
               className="inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
