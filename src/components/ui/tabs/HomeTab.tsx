@@ -545,25 +545,37 @@ export function HomeTab() {
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 bg-amber-50/80 dark:bg-neutral-900/80 backdrop-blur border-b border-amber-200/60 dark:border-neutral-800 z-30 px-4 py-2">
         <div className="flex justify-between items-center max-w-5xl mx-auto">
-          <div className="w-10" />
-
-          {/* Title - Center */}
-          <div className="flex flex-col items-center select-none">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-serif font-bold tracking-wide w-logo">
-                W
-              </span>
-              <span className="text-xs sm:text-sm font-serif italic text-amber-800/80 dark:text-amber-300/80">
-                dictionary edition
-              </span>
-            </div>
-            <div className="text-[10px] sm:text-xs font-serif text-amber-700/80 dark:text-amber-300/60">
-              [wurd-uhl] • n. a daily lexical puzzle of five letters
-            </div>
+          {/* Left: W logo */}
+          <div className="flex items-center select-none">
+            <span className="text-2xl sm:text-3xl font-serif font-bold tracking-wide w-logo">
+              W
+            </span>
           </div>
 
-          {/* Stats Button - Right */}
+          {/* Right: Controls */}
           <div className="flex items-center gap-3">
+            {/* Practice toggle */}
+            <button
+              onClick={() => setPracticeMode((p) => !p)}
+              className={classNames(
+                "inline-flex items-center justify-center h-10 w-10 rounded-md transition-colors shadow-sm border",
+                practiceMode
+                  ? "border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-neutral-900"
+                  : "border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              )}
+              aria-label="Toggle practice mode"
+              title={practiceMode ? "Practice: ON" : "Practice: OFF"}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path d="M5 4h10a3 3 0 0 1 3 3v2h1a1 1 0 1 1 0 2h-1v2a3 3 0 0 1-3 3H5a1 1 0 1 1 0-2h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 1 1 0-2zM4 9h9a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2z" />
+              </svg>
+            </button>
             <button
               onClick={() => setShowRules(true)}
               className="inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
