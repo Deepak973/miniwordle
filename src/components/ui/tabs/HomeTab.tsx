@@ -18,6 +18,39 @@ const NUM_ROWS = 6;
 const WORD_LENGTH = 5;
 
 // Dictionary for word validation
+// Practice word bank (sample 5-letter words)
+const PRACTICE_WORDS = [
+  "APPLE",
+  "BROWN",
+  "CANDY",
+  "DELTA",
+  "EAGER",
+  "FAITH",
+  "GAZER",
+  "HONEY",
+  "IVORY",
+  "JELLY",
+  "KARMA",
+  "LUMEN",
+  "MIRTH",
+  "NOBLE",
+  "OPERA",
+  "PIXEL",
+  "QUILT",
+  "ROVER",
+  "SONIC",
+  "TANGO",
+  "UMBRA",
+  "VIGOR",
+  "WISER",
+  "XENON",
+  "YODEL",
+  "ZESTY",
+  "ALERT",
+  "BRAVE",
+  "CRISP",
+  "DREAM",
+];
 
 function getLetterStatus(guess: string, answer: string) {
   // Returns an array of: "correct" | "present" | "absent"
@@ -92,6 +125,41 @@ export function HomeTab() {
   const [showCompletedPopup, setShowCompletedPopup] = useState<boolean>(false);
   const [showRules, setShowRules] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [practiceMode, setPracticeMode] = useState(false);
+
+  // Practice mode state (no persistence)
+  const [practiceAnswer, setPracticeAnswer] = useState<string>("");
+  const [practiceGuesses, setPracticeGuesses] = useState<string[]>([]);
+  const [practiceStatuses, setPracticeStatuses] = useState<
+    ("correct" | "present" | "absent")[][]
+  >([]);
+  const [practiceCurrentGuess, setPracticeCurrentGuess] = useState<string>("");
+  const [practiceSubmitting, setPracticeSubmitting] = useState<boolean>(false);
+  const [practiceFlippingRow, setPracticeFlippingRow] = useState<number | null>(
+    null
+  );
+  const [practiceSubmittingGuess, setPracticeSubmittingGuess] =
+    useState<string>("");
+  const [practiceOver, setPracticeOver] = useState<boolean>(false);
+
+  const initPracticeRound = () => {
+    const word =
+      PRACTICE_WORDS[Math.floor(Math.random() * PRACTICE_WORDS.length)];
+    setPracticeAnswer(word);
+    setPracticeGuesses([]);
+    setPracticeStatuses([]);
+    setPracticeCurrentGuess("");
+    setPracticeSubmitting(false);
+    setPracticeFlippingRow(null);
+    setPracticeSubmittingGuess("");
+    setPracticeOver(false);
+  };
+
+  useEffect(() => {
+    if (practiceMode && !practiceAnswer) {
+      initPracticeRound();
+    }
+  }, [practiceMode]);
 
   useEffect(() => {
     const fid = context?.user?.fid?.toString() || "anonymous";
@@ -111,17 +179,17 @@ export function HomeTab() {
   }, []);
 
   // Calculate letter statuses for keyboard
-  const getLetterStatuses = () => {
+  const getLetterStatusesFrom = (
+    guesses: string[],
+    statuses: ("correct" | "present" | "absent")[][]
+  ) => {
     const letterStatuses: Record<string, "correct" | "present" | "absent"> = {};
-
-    // Process all guesses to determine final status for each letter
-    game.guesses.forEach((guess: string, guessIndex: number) => {
-      const guessStatuses = game.statuses[guessIndex];
+    guesses.forEach((guess: string, guessIndex: number) => {
+      const guessStatuses = statuses[guessIndex] || [];
       guess.split("").forEach((letter: string, letterIndex: number) => {
         const status = guessStatuses[letterIndex];
         const currentStatus = letterStatuses[letter];
-
-        // Priority: correct > present > absent
+        if (!status) return;
         if (!currentStatus) {
           letterStatuses[letter] = status;
         } else if (status === "correct") {
@@ -129,10 +197,8 @@ export function HomeTab() {
         } else if (status === "present" && currentStatus === "absent") {
           letterStatuses[letter] = "present";
         }
-        // If current status is "correct" or "present", don't downgrade to "absent"
       });
     });
-
     return letterStatuses;
   };
 
@@ -165,6 +231,83 @@ export function HomeTab() {
       setError(null);
       setShowError(false);
     }
+  };
+
+  // Practice handlers (no DB)
+  const handlePracticeKeyPress = (key: string) => {
+    if (practiceSubmitting || practiceOver) return;
+    if (practiceCurrentGuess.length < WORD_LENGTH) {
+      const newGuess = practiceCurrentGuess + key;
+      setPracticeCurrentGuess(newGuess);
+      const cellKey = `${practiceGuesses.length}-${newGuess.length - 1}`;
+      setShakingCells((prev) => new Set([...prev, cellKey]));
+      setTimeout(() => {
+        setShakingCells((prev) => {
+          const ns = new Set(prev);
+          ns.delete(cellKey);
+          return ns;
+        });
+      }, 500);
+      setError(null);
+      setShowError(false);
+    }
+  };
+
+  const handlePracticeEnter = async () => {
+    if (practiceSubmitting || practiceOver) return;
+    if (practiceCurrentGuess.length < WORD_LENGTH) {
+      setError("Not enough letters");
+      setShowError(true);
+      setIsShaking(true);
+      setTimeout(() => {
+        setShowError(false);
+        setError(null);
+      }, 2000);
+      setTimeout(() => setIsShaking(false), 250);
+      return;
+    }
+    const wordExists = await isValidWord(practiceCurrentGuess);
+    if (!wordExists) {
+      setError("Not in dictionary");
+      setShowError(true);
+      setIsShaking(true);
+      setTimeout(() => {
+        setShowError(false);
+        setError(null);
+      }, 2000);
+      setTimeout(() => setIsShaking(false), 250);
+      return;
+    }
+    setPracticeSubmitting(true);
+    setError(null);
+    setShowError(false);
+    const newGuess = practiceCurrentGuess.toUpperCase();
+    const newStatuses = getLetterStatus(newGuess, practiceAnswer);
+    setPracticeSubmittingGuess(newGuess);
+    setPracticeCurrentGuess("");
+    setPracticeFlippingRow(practiceGuesses.length);
+    // After flip animation, commit state
+    setTimeout(() => {
+      setPracticeFlippingRow(null);
+      setPracticeSubmitting(false);
+      setPracticeSubmittingGuess("");
+      setPracticeGuesses((prev) => [...prev, newGuess]);
+      setPracticeStatuses((prev) => [...prev, newStatuses]);
+
+      if (
+        newGuess === practiceAnswer ||
+        practiceGuesses.length + 1 >= NUM_ROWS
+      ) {
+        setPracticeOver(true);
+      }
+    }, 2500);
+  };
+
+  const handlePracticeBackspace = () => {
+    if (practiceSubmitting || practiceOver) return;
+    setPracticeCurrentGuess((prev) => prev.slice(0, -1));
+    setError(null);
+    setShowError(false);
   };
 
   const handleEnter = async () => {
@@ -309,7 +452,9 @@ export function HomeTab() {
     handleKeyPress,
   ]);
 
-  const letterStatuses = getLetterStatuses();
+  const letterStatuses = practiceMode
+    ? getLetterStatusesFrom(practiceGuesses, practiceStatuses)
+    : getLetterStatusesFrom(game.guesses, game.statuses);
 
   // Show completed game popup if game is completed
   useEffect(() => {
@@ -329,7 +474,7 @@ export function HomeTab() {
   };
 
   // Show loading state
-  if (loading || dailyWordLoading) {
+  if (!practiceMode && (loading || dailyWordLoading)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen dictionary-bg dark:dictionary-bg-dark p-6">
         <div className="dictionary-card rounded-xl shadow-lg border border-amber-300/70 dark:border-neutral-800 px-6 py-5">
@@ -363,8 +508,8 @@ export function HomeTab() {
     );
   }
 
-  // Show error state
-  if (gameError || dailyWordError) {
+  // Show error state (only in daily mode)
+  if (!practiceMode && (gameError || dailyWordError)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
         <div className="text-red-500 mb-4">
@@ -381,7 +526,7 @@ export function HomeTab() {
   }
 
   // Show error if no daily word is available
-  if (!dailyWord) {
+  if (!practiceMode && !dailyWord) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
         <div className="text-red-500 mb-4">No daily word available</div>
@@ -479,8 +624,8 @@ export function HomeTab() {
       {/* Scrollable Main Content */}
       <div className="min-h-screen dictionary-bg dark:dictionary-bg-dark pt-[56px] pb-36">
         <div className="flex flex-col items-center justify-start p-2">
-          {/* Completed Game Popup */}
-          {showCompletedPopup && (
+          {/* Completed Game Popup (daily mode only) */}
+          {!practiceMode && showCompletedPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="dictionary-card rounded-xl p-6 max-w-sm w-full mx-4 text-center relative border border-amber-300/70 dark:border-neutral-800 shadow-lg">
                 {/* Close button */}
@@ -570,27 +715,46 @@ export function HomeTab() {
           <div className="w-full max-w-md dictionary-card rounded-xl shadow-lg border border-amber-300/70 dark:border-neutral-800 overflow-hidden">
             <div className="bg-amber-100/60 dark:bg-neutral-900 px-4 py-3 border-b border-amber-300/70 dark:border-neutral-800 flex items-center justify-between">
               <div className="text-sm font-serif italic text-amber-900/80 dark:text-amber-200/80">
-                Page {new Date().getDate()} • Volume {new Date().getFullYear()}
+                {practiceMode
+                  ? "Practice"
+                  : `Page ${new Date().getDate()} • Volume ${new Date().getFullYear()}`}
               </div>
               <div className="h-3 w-12 bg-amber-300/70 dark:bg-neutral-700 rounded-sm" />
             </div>
 
             <div className="p-4 grid grid-rows-6 gap-2 bg-paper dark:bg-paper-dark">
               {[...Array(NUM_ROWS)].map((_, rowIndex) => {
+                const showGuesses = practiceMode
+                  ? practiceGuesses
+                  : game.guesses;
+                const showStatuses = practiceMode
+                  ? practiceStatuses
+                  : game.statuses;
+                const submitting = practiceMode
+                  ? practiceSubmitting
+                  : isSubmitting;
+                const flippingIdx = practiceMode
+                  ? practiceFlippingRow
+                  : flippingRow;
+                const submittingWord = practiceMode
+                  ? practiceSubmittingGuess
+                  : submittingGuess;
+                const current = practiceMode
+                  ? practiceCurrentGuess
+                  : currentGuess;
+
                 const word =
-                  rowIndex < game.guesses.length
-                    ? game.guesses[rowIndex]
-                    : rowIndex === game.guesses.length && !isSubmitting
-                    ? currentGuess
-                    : rowIndex === flippingRow
-                    ? submittingGuess
+                  rowIndex < showGuesses.length
+                    ? showGuesses[rowIndex]
+                    : rowIndex === showGuesses.length && !submitting
+                    ? current
+                    : rowIndex === flippingIdx
+                    ? submittingWord
                     : "";
                 const rowStatus =
-                  rowIndex < game.statuses.length
-                    ? game.statuses[rowIndex]
-                    : [];
-                const isCurrentRow = rowIndex === game.guesses.length;
-                const isFlipping = flippingRow === rowIndex;
+                  rowIndex < showStatuses.length ? showStatuses[rowIndex] : [];
+                const isCurrentRow = rowIndex === showGuesses.length;
+                const isFlipping = flippingIdx === rowIndex;
 
                 return (
                   <div
@@ -643,7 +807,7 @@ export function HomeTab() {
             </div>
           </div>
 
-          {game.won && (
+          {!practiceMode && game.won && (
             <>
               <div className="text-center font-serif text-amber-800 dark:text-amber-200 mt-4 mb-3">
                 You guessed today&apos;s word. Come again tomorrow to continue
@@ -666,14 +830,28 @@ export function HomeTab() {
               </div>
             </>
           )}
+
+          {practiceMode && practiceOver && (
+            <div className="w-full max-w-md mt-3">
+              <div className="dictionary-card border border-amber-300/70 dark:border-neutral-800 rounded-lg p-3 text-center text-amber-900 dark:text-amber-100">
+                <div className="mb-2 font-serif">Practice round finished.</div>
+                <button
+                  className="w-full border border-amber-300 dark:border-neutral-700 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-amber-900 dark:text-amber-200 font-semibold py-2 px-4 rounded-md transition-colors shadow-sm"
+                  onClick={initPracticeRound}
+                >
+                  New practice word
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Fixed Keyboard at bottom */}
       <Keyboard
-        onKeyPress={handleKeyPress}
-        onEnter={handleEnter}
-        onBackspace={handleBackspace}
+        onKeyPress={practiceMode ? handlePracticeKeyPress : handleKeyPress}
+        onEnter={practiceMode ? handlePracticeEnter : handleEnter}
+        onBackspace={practiceMode ? handlePracticeBackspace : handleBackspace}
         letterStatuses={letterStatuses}
       />
 
