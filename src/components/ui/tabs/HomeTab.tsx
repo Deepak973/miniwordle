@@ -94,6 +94,19 @@ export function HomeTab() {
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
+    const fid = context?.user?.fid?.toString() || "anonymous";
+    const key = `hasSeenRules:${fid}`;
+    const seen =
+      typeof window !== "undefined" ? localStorage.getItem(key) : null;
+    if (!seen) {
+      setShowRules(true);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(key, "1");
+      }
+    }
+  }, [context?.user?.fid]);
+
+  useEffect(() => {
     setGameStartTime(new Date());
   }, []);
 
@@ -390,9 +403,19 @@ export function HomeTab() {
           {/* Game Rules Button - Left */}
           <button
             onClick={() => setShowRules(true)}
-            className="hidden sm:inline-flex items-center gap-2 border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 font-semibold py-2 px-4 rounded-md transition-colors shadow-sm"
+            className="hidden sm:inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
+            aria-label="Open rules"
+            title="Rules"
           >
-            Rules
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path d="M4 4h10a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a4 4 0 0 1-4-4V6a2 2 0 0 1 2-2zm2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8V8a2 2 0 0 0-2-2H6zm10 0h2a2 2 0 0 1 2 2v10h-2V8a4 4 0 0 0-2-2z" />
+            </svg>
           </button>
 
           {/* Title - Center */}
