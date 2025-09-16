@@ -42,6 +42,9 @@ export function useDailyWord(): UseDailyWordReturn {
   const [dailyWord, setDailyWord] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState<string>(
+    new Date().toLocaleDateString("en-CA")
+  );
 
   const fetchDailyWord = async () => {
     try {
@@ -75,6 +78,51 @@ export function useDailyWord(): UseDailyWordReturn {
   useEffect(() => {
     fetchDailyWord();
   }, []);
+
+  // Track local date changes and refetch at local midnight
+  useEffect(() => {
+    const updateDateAndMaybeRefetch = () => {
+      const newDate = new Date().toLocaleDateString("en-CA");
+      if (newDate !== currentDate) {
+        setCurrentDate(newDate);
+        fetchDailyWord();
+      }
+    };
+
+    // Compute ms until next local midnight
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      0,
+      0
+    );
+    const timeoutMs = nextMidnight.getTime() - now.getTime();
+
+    const timeoutId = window.setTimeout(() => {
+      updateDateAndMaybeRefetch();
+      // After first refetch, set a 24h interval for subsequent days
+      const intervalId = window.setInterval(
+        updateDateAndMaybeRefetch,
+        24 * 60 * 60 * 1000
+      );
+      // Store interval on window to allow cleanup
+      (window as any).__dailyWordIntervalId = intervalId;
+    }, Math.max(0, timeoutMs));
+    (window as any).__dailyWordTimeoutId = timeoutId;
+
+    return () => {
+      if ((window as any).__dailyWordTimeoutId) {
+        clearTimeout((window as any).__dailyWordTimeoutId);
+      }
+      if ((window as any).__dailyWordIntervalId) {
+        clearInterval((window as any).__dailyWordIntervalId);
+      }
+    };
+  }, [currentDate]);
 
   const refetch = async () => {
     await fetchDailyWord();

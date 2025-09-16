@@ -459,11 +459,11 @@ export function HomeTab() {
           {/* Completed Game Popup */}
           {showCompletedPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4 text-center relative">
+              <div className="dictionary-card rounded-xl p-6 max-w-sm w-full mx-4 text-center relative border border-amber-300/70 dark:border-neutral-800 shadow-lg">
                 {/* Close button */}
                 <button
                   onClick={() => setShowCompletedPopup(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="absolute top-4 right-4 text-amber-900 hover:text-amber-700 dark:text-amber-200 dark:hover:text-amber-100"
                 >
                   <svg
                     width="24"
@@ -475,28 +475,28 @@ export function HomeTab() {
                   </svg>
                 </button>
 
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  🎯 Today&apos;s Word!
+                <h2 className="text-2xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-3">
+                  Today&apos;s Word
                 </h2>
 
-                <p className="text-lg mb-6 text-gray-600 dark:text-gray-300">
+                <p className="text-base mb-5 text-amber-800/90 dark:text-amber-200/90">
                   You have played today&apos;s game. Come back tomorrow to guess
                   a new word! The word was{" "}
-                  <span className="font-bold text-purple-500 bg-yellow-200 dark:bg-yellow-600 px-2 rounded">
+                  <span className="font-bold text-amber-900 dark:text-amber-100 bg-amber-200/80 dark:bg-neutral-800 px-2 rounded border border-amber-300/70 dark:border-neutral-700">
                     {dailyWord}
                   </span>
                 </p>
 
                 {/* Game Result */}
-                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6">
-                  <div className="text-lg font-semibold mb-2">
+                <div className="bg-amber-100/70 dark:bg-neutral-900 rounded-lg p-4 mb-6 border border-amber-300/70 dark:border-neutral-800 text-left">
+                  <div className="text-sm font-serif text-amber-900 dark:text-amber-100 mb-2">
                     {game.won ? (
-                      <span className="text-green-600">🎉 You Won!</span>
+                      <span>Result: Won</span>
                     ) : (
-                      <span className="text-red-600">😔 Game Over</span>
+                      <span>Result: Lost</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-amber-800/90 dark:text-amber-200/80">
                     Attempts: {game.attempts}/6
                     {game.timeTaken > 0 && (
                       <span className="ml-4">
@@ -509,9 +509,9 @@ export function HomeTab() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowCompletedPopup(false)}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded transition-colors"
+                    className="flex-1 border border-amber-300 dark:border-neutral-700 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-amber-900 dark:text-amber-200 font-semibold py-2 px-6 rounded-md transition-colors shadow-sm"
                   >
-                    Got it!
+                    Close
                   </button>
                   {game.won && (
                     <ShareButton
@@ -527,7 +527,7 @@ export function HomeTab() {
                           `${APP_URL}/share/${context?.user?.fid || ""}`,
                         ],
                       }}
-                      className="flex-1"
+                      className="flex-1 border border-amber-300 dark:border-neutral-700 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-amber-900 dark:text-amber-200 font-semibold rounded-md transition-colors shadow-sm"
                     />
                   )}
                 </div>
