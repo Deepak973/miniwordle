@@ -36,23 +36,29 @@ export function Keyboard({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 w-full px-2 pb-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
+    <div className="fixed bottom-0 left-0 right-0 w-full px-2 pb-4 bg-amber-50/80 dark:bg-neutral-950/70 backdrop-blur border-t border-amber-200/60 dark:border-neutral-800">
       {KEYBOARD_LAYOUT.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex justify-center gap-1 mb-1">
+        <div key={rowIndex} className="flex justify-center gap-1.5 mb-1.5">
           {row.map((key) => {
             const status = getKeyStatus(key);
             const isSpecialKey = key === "ENTER" || key === "BACKSPACE";
 
             const baseKeyStyle =
-              "flex items-center justify-center font-semibold text-sm uppercase rounded transition-colors h-12 border-2";
+              "flex items-center justify-center font-serif font-semibold text-sm uppercase rounded-md transition-all h-12 border shadow-sm";
 
-            const widthClass = isSpecialKey ? "w-[48px]" : "w-10 sm:w-12";
+            const widthClass = isSpecialKey
+              ? "px-3 min-w-[56px]"
+              : "w-10 sm:w-12";
 
             const bgColorClass = {
-              correct: "!bg-green-500 !text-white",
-              present: "!bg-yellow-500 !text-white",
-              absent: "!bg-gray-500 !text-white",
-              unused: "bg-gray-300 dark:bg-gray-600 text-black dark:text-white",
+              correct:
+                "!bg-emerald-500 !text-white !border-emerald-600 shadow-[0_1px_0_rgba(16,185,129,0.4),inset_0_-2px_0_rgba(0,0,0,0.08)]",
+              present:
+                "!bg-amber-400 !text-white !border-amber-500 shadow-[0_1px_0_rgba(245,158,11,0.4),inset_0_-2px_0_rgba(0,0,0,0.08)]",
+              absent:
+                "!bg-amber-100 !text-amber-900 dark:!bg-neutral-800 dark:!text-amber-100 !border-amber-300 dark:!border-neutral-700",
+              unused:
+                "bg-amber-50/80 dark:bg-neutral-900 text-amber-900 dark:text-amber-100 border-amber-300/80 dark:border-neutral-800",
             }[status];
 
             return (

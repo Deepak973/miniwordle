@@ -50,33 +50,7 @@ export default function App(
   { title }: AppProps = { title: "Neynar Starter Kit" }
 ) {
   // --- Hooks ---
-  const { isSDKLoaded, context, setInitialTab, currentTab } = useMiniApp();
-
-  // --- Effects ---
-  /**
-   * Sets the initial tab to "home" when the SDK is loaded.
-   *
-   * This effect ensures that users start on the home tab when they first
-   * load the mini app. It only runs when the SDK is fully loaded to
-   * prevent errors during initialization.
-   */
-  useEffect(() => {
-    if (isSDKLoaded) {
-      setInitialTab(Tab.Home);
-    }
-  }, [isSDKLoaded, setInitialTab]);
-
-  // --- Early Returns ---
-  if (!isSDKLoaded) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="spinner h-8 w-8 mx-auto mb-4"></div>
-          <p>Loading SDK...</p>
-        </div>
-      </div>
-    );
-  }
+  const { context } = useMiniApp();
 
   if (!context?.user?.fid) {
     return (
@@ -102,7 +76,7 @@ export default function App(
         <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
 
         {/* Tab content rendering */}
-        {currentTab === Tab.Home && <HomeTab />}
+        <HomeTab />
       </div>
     </div>
   );

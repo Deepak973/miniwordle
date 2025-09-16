@@ -22,11 +22,11 @@ export function StatsDisplay({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-lg w-full mx-4 relative">
+        <div className="bg-amber-50/95 dark:bg-neutral-950/95 rounded-xl p-6 max-w-lg w-full mx-4 relative border border-amber-200/70 dark:border-neutral-800 shadow-lg">
           {/* Close Button - matching GameRules style */}
           <button
             onClick={() => onClose()}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+            className="absolute top-4 right-4 text-amber-900 hover:text-amber-700 dark:text-amber-200 dark:hover:text-amber-100"
           >
             <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path
@@ -37,53 +37,49 @@ export function StatsDisplay({
             </svg>
           </button>
 
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6 text-center">
+          <h2 className="text-2xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-6 text-center">
             Game Stats
           </h2>
 
           {/* Stats Grid with Box Design */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             {/* Current Streak Box */}
-            <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">🔥</div>
-              <div className="text-3xl font-bold text-white mb-1">
-                {currentStreak}
-              </div>
-              <div className="text-sm text-yellow-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Current Streak
+              </div>
+              <div className="text-3xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {currentStreak}
               </div>
             </div>
 
             {/* Max Streak Box */}
-            <div className="bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">🏆</div>
-              <div className="text-3xl font-bold text-white mb-1">
-                {maxStreak}
-              </div>
-              <div className="text-sm text-cyan-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Max Streak
+              </div>
+              <div className="text-3xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {maxStreak}
               </div>
             </div>
 
             {/* Games Played Box */}
-            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">🎮</div>
-              <div className="text-3xl font-bold text-white mb-1">
-                {gamesPlayed}
-              </div>
-              <div className="text-sm text-blue-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Games Played
+              </div>
+              <div className="text-3xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {gamesPlayed}
               </div>
             </div>
 
             {/* Games Won Box */}
-            <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">✅</div>
-              <div className="text-3xl font-bold text-white mb-1">
-                {gamesWon}
-              </div>
-              <div className="text-sm text-green-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Games Won
+              </div>
+              <div className="text-3xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {gamesWon}
               </div>
             </div>
           </div>
@@ -91,24 +87,22 @@ export function StatsDisplay({
           {/* Additional Stats Row */}
           <div className="grid grid-cols-2 gap-4">
             {/* Win Rate Box */}
-            <div className="bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">📈</div>
-              <div className="text-2xl font-bold text-white mb-1">
-                {winRate.toFixed(1)}%
-              </div>
-              <div className="text-sm text-purple-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Win Rate
+              </div>
+              <div className="text-2xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {winRate.toFixed(1)}%
               </div>
             </div>
 
             {/* Average Attempts Box */}
-            <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg p-4 text-center shadow-lg">
-              <div className="text-2xl mb-1">🎯</div>
-              <div className="text-2xl font-bold text-white mb-1">
-                {averageAttempts.toFixed(1)}
-              </div>
-              <div className="text-sm text-orange-100 font-medium">
+            <div className="rounded-lg p-4 text-center shadow-sm border border-amber-300/70 dark:border-neutral-800 bg-amber-100/70 dark:bg-neutral-900">
+              <div className="text-[11px] tracking-wide uppercase font-medium text-amber-800/80 dark:text-amber-200/80 mb-1">
                 Avg Attempts
+              </div>
+              <div className="text-2xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">
+                {averageAttempts.toFixed(1)}
               </div>
             </div>
           </div>

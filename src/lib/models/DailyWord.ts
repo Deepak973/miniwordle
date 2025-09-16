@@ -18,9 +18,6 @@ const DailyWordSchema = new Schema<IDailyWord>(
     word: {
       type: String,
       required: true,
-      uppercase: true,
-      minlength: 5,
-      maxlength: 5,
     },
   },
   {
@@ -31,5 +28,8 @@ const DailyWordSchema = new Schema<IDailyWord>(
 // Compound index to ensure one word per day
 DailyWordSchema.index({ date: 1 }, { unique: true });
 
-export default mongoose.models.DailyWord ||
-  mongoose.model<IDailyWord>("DailyWord", DailyWordSchema);
+if (mongoose.models.DailyWord) {
+  delete mongoose.models.DailyWord;
+}
+
+export default mongoose.model<IDailyWord>("DailyWord", DailyWordSchema);

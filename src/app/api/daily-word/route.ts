@@ -56,14 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate word length
-    if (word.length !== 5) {
-      return NextResponse.json(
-        { error: "word must be exactly 5 letters" },
-        { status: 400 }
-      );
-    }
-
     // Check if word already exists for this date
     const existingWord = await DailyWord.findOne({ date });
     if (existingWord) {
@@ -73,10 +65,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new daily word
+    // Create new daily word - store encrypted string as-is
     const dailyWord = new DailyWord({
       date,
-      word: word.toUpperCase(),
+      word,
     });
 
     await dailyWord.save();
@@ -86,10 +78,20 @@ export async function POST(request: NextRequest) {
       date: dailyWord.date,
       word: dailyWord.word,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/daily-word:", error);
+    // Handle duplicate key error from Mongo
+    if (error && (error.code === 11000 || error.code === "E11000")) {
+      return NextResponse.json(
+        { error: "Daily word already exists for this date" },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        message: error?.message || String(error),
+      },
       { status: 500 }
     );
   }

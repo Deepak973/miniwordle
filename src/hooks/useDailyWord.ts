@@ -63,7 +63,7 @@ export function useDailyWord(): UseDailyWordReturn {
       const decryptedWord = data.word.includes(":")
         ? decrypt(data.word)
         : data.word;
-      setDailyWord(decryptedWord);
+      setDailyWord(decryptedWord.toUpperCase());
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Error fetching daily word:", err);

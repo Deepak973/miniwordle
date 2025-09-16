@@ -13,6 +13,8 @@
 # testing
 /coverage
 
+/scripts/populateDailyWords.js
+
 # next.js
 /.next/
 /out/

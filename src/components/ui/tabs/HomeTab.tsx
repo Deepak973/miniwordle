@@ -53,6 +53,9 @@ export function HomeTab() {
   const { context } = useMiniApp();
   const userId = context?.user?.fid?.toString() || "";
 
+  // User avatar image from context
+  const userAvatarUrl = context?.user?.pfpUrl || undefined;
+
   // Use the game hook for MongoDB integration
   const {
     game,
@@ -315,31 +318,33 @@ export function HomeTab() {
   // Show loading state
   if (loading || dailyWordLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-black">
-        <div className="flex items-center space-x-3">
-          <svg
-            className="w-6 h-6 text-gray-700 dark:text-white animate-spin"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            />
-          </svg>
-          <span className="text-lg font-semibold text-gray-800 dark:text-white">
-            Loading game...
-          </span>
+      <div className="flex flex-col items-center justify-center min-h-screen dictionary-bg dark:dictionary-bg-dark p-6">
+        <div className="dictionary-card rounded-xl shadow-lg border border-amber-300/70 dark:border-neutral-800 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <svg
+              className="w-7 h-7 text-amber-700 dark:text-amber-300 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              />
+            </svg>
+            <span className="text-lg font-serif font-bold text-amber-900 dark:text-amber-100">
+              Loading game...
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -380,39 +385,76 @@ export function HomeTab() {
   return (
     <>
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 z-30 px-4 py-3">
+      <div className="fixed top-0 left-0 right-0 bg-amber-50/80 dark:bg-neutral-900/80 backdrop-blur border-b border-amber-200/60 dark:border-neutral-800 z-30 px-4 py-2">
         <div className="flex justify-between items-center max-w-5xl mx-auto">
           {/* Game Rules Button - Left */}
           <button
             onClick={() => setShowRules(true)}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors"
+            className="hidden sm:inline-flex items-center gap-2 border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 font-semibold py-2 px-4 rounded-md transition-colors shadow-sm"
           >
             Rules
           </button>
 
-          {/* Logo - Center */}
-          <div className="flex items-center">
-            <img
-              src="/logo.png"
-              alt="Wordle Mini App Logo"
-              className="h-20 w-20"
-            />
+          {/* Title - Center */}
+          <div className="flex flex-col items-center select-none">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-serif font-bold tracking-wide w-logo">
+                W
+              </span>
+              <span className="text-xs sm:text-sm font-serif italic text-amber-800/80 dark:text-amber-300/80">
+                dictionary edition
+              </span>
+            </div>
+            <div className="text-[10px] sm:text-xs font-serif text-amber-700/80 dark:text-amber-300/60">
+              [wurd-uhl] • n. a daily lexical puzzle of five letters
+            </div>
           </div>
 
           {/* Stats Button - Right */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowStats(true)}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors"
+              className="inline-flex items-center justify-center border border-amber-300 dark:border-neutral-700 text-amber-900 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 h-10 w-10 rounded-md transition-colors shadow-sm"
+              aria-label="Open stats"
+              title="Stats"
             >
-              Stats
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path d="M5 3a1 1 0 0 1 1 1v14h12a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zm4 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v5H9v-5zm6-6a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v11h-3V7zm-6 2a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v9h-3V9z" />
+              </svg>
             </button>
+            {userAvatarUrl && (
+              <img
+                src={userAvatarUrl}
+                alt="User profile"
+                title={
+                  context?.user?.username
+                    ? `@${context.user.username}`
+                    : "Profile"
+                }
+                className="h-10 w-10 rounded-full border border-amber-300 dark:border-neutral-700 shadow-sm object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (
+                    context?.user?.pfpUrl &&
+                    target.src !== context.user?.pfpUrl
+                  ) {
+                    target.src = context.user.pfpUrl as string;
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
 
       {/* Scrollable Main Content */}
-      <div className="min-h-screen bg-white dark:bg-black pt-20 pb-32">
+      <div className="min-h-screen dictionary-bg dark:dictionary-bg-dark pt-[72px] pb-36">
         <div className="flex flex-col items-center justify-start p-4">
           {/* Completed Game Popup */}
           {showCompletedPopup && (
@@ -494,85 +536,97 @@ export function HomeTab() {
           )}
 
           {/* Error message at the top of the board */}
-          <div className="h-12 w-full max-w-xs mb-4 flex items-center justify-center">
+          <div className="h-12 w-full max-w-md mb-4 flex items-center justify-center">
             {showError && error && (
-              <div className="animate-slide-down bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg text-center">
+              <div className="animate-slide-down bg-amber-200/90 dark:bg-neutral-800 text-amber-950 dark:text-amber-100 border border-amber-300 dark:border-neutral-700 px-4 py-2 rounded-md shadow-sm font-serif">
                 {error}
               </div>
             )}
           </div>
 
-          <div className="w-full max-w-xs grid grid-rows-6 gap-1">
-            {[...Array(NUM_ROWS)].map((_, rowIndex) => {
-              const word =
-                rowIndex < game.guesses.length
-                  ? game.guesses[rowIndex]
-                  : rowIndex === game.guesses.length && !isSubmitting
-                  ? currentGuess
-                  : rowIndex === flippingRow
-                  ? submittingGuess
-                  : "";
-              const rowStatus =
-                rowIndex < game.statuses.length ? game.statuses[rowIndex] : [];
-              const isCurrentRow = rowIndex === game.guesses.length;
-              const isFlipping = flippingRow === rowIndex;
+          <div className="w-full max-w-md dictionary-card rounded-xl shadow-lg border border-amber-300/70 dark:border-neutral-800 overflow-hidden">
+            <div className="bg-amber-100/60 dark:bg-neutral-900 px-4 py-3 border-b border-amber-300/70 dark:border-neutral-800 flex items-center justify-between">
+              <div className="text-sm font-serif italic text-amber-900/80 dark:text-amber-200/80">
+                Page {new Date().getDate()} • Volume {new Date().getFullYear()}
+              </div>
+              <div className="h-3 w-12 bg-amber-300/70 dark:bg-neutral-700 rounded-sm" />
+            </div>
 
-              return (
-                <div
-                  key={rowIndex}
-                  className={classNames("grid grid-cols-5 gap-1", {
-                    "animate-shake": isShaking && isCurrentRow,
-                  })}
-                >
-                  {[...Array(WORD_LENGTH)].map((_, colIndex) => {
-                    const cellStatus = rowStatus[colIndex] || "";
-                    const isFlippingCell = isFlipping && colIndex < word.length;
-                    const cellKey = `${rowIndex}-${colIndex}`;
-                    const isShakingCell = shakingCells.has(cellKey);
+            <div className="p-4 grid grid-rows-6 gap-2 bg-paper dark:bg-paper-dark">
+              {[...Array(NUM_ROWS)].map((_, rowIndex) => {
+                const word =
+                  rowIndex < game.guesses.length
+                    ? game.guesses[rowIndex]
+                    : rowIndex === game.guesses.length && !isSubmitting
+                    ? currentGuess
+                    : rowIndex === flippingRow
+                    ? submittingGuess
+                    : "";
+                const rowStatus =
+                  rowIndex < game.statuses.length
+                    ? game.statuses[rowIndex]
+                    : [];
+                const isCurrentRow = rowIndex === game.guesses.length;
+                const isFlipping = flippingRow === rowIndex;
 
-                    return (
-                      <div
-                        key={colIndex}
-                        className={classNames(
-                          "w-full aspect-square border-2 text-center font-bold text-xl uppercase flex items-center justify-center transition-all duration-500",
-                          {
-                            "bg-green-500 text-white border-green-600":
-                              cellStatus === "correct",
-                            "bg-yellow-400 text-white border-yellow-500":
-                              cellStatus === "present",
-                            "bg-gray-300 dark:bg-gray-700 text-black dark:text-white border-gray-400 dark:border-gray-600":
-                              cellStatus === "absent" && word[colIndex],
-                            "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-700":
-                              !cellStatus,
-                            "animate-flip": isFlippingCell,
-                            "animate-cell-shake": isShakingCell,
-                          }
-                        )}
-                        style={{
-                          animationDelay: isFlippingCell
-                            ? `${colIndex * 300}ms`
-                            : "0ms",
-                          animationFillMode: isFlippingCell
-                            ? "forwards"
-                            : "none",
-                        }}
-                      >
-                        {word[colIndex] || ""}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={rowIndex}
+                    className={classNames("grid grid-cols-5 gap-2", {
+                      "animate-shake": isShaking && isCurrentRow,
+                    })}
+                  >
+                    {[...Array(WORD_LENGTH)].map((_, colIndex) => {
+                      const cellStatus = rowStatus[colIndex] || "";
+                      const isFlippingCell =
+                        isFlipping && colIndex < word.length;
+                      const cellKey = `${rowIndex}-${colIndex}`;
+                      const isShakingCell = shakingCells.has(cellKey);
+
+                      return (
+                        <div
+                          key={colIndex}
+                          className={classNames(
+                            "w-full aspect-square border text-center font-bold text-2xl uppercase flex items-center justify-center transition-all duration-500 rounded-lg font-serif shadow-sm tile",
+                            {
+                              "bg-emerald-500 text-white border-emerald-600 shadow-emerald":
+                                cellStatus === "correct",
+                              "bg-amber-400 text-white border-amber-500 shadow-amber":
+                                cellStatus === "present",
+                              "bg-amber-100 dark:bg-neutral-800 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-neutral-700":
+                                cellStatus === "absent" && word[colIndex],
+                              "bg-amber-50/70 dark:bg-neutral-900 text-amber-900 dark:text-amber-100 border-amber-300/80 dark:border-neutral-800":
+                                !cellStatus,
+                              "animate-flip": isFlippingCell,
+                              "animate-cell-shake": isShakingCell,
+                            }
+                          )}
+                          style={{
+                            animationDelay: isFlippingCell
+                              ? `${colIndex * 300}ms`
+                              : "0ms",
+                            animationFillMode: isFlippingCell
+                              ? "forwards"
+                              : "none",
+                          }}
+                        >
+                          {word[colIndex] || ""}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {game.won && (
             <>
-              <div className="text-center text-gray-600 dark:text-gray-400 mb-4">
+              <div className="text-center font-serif text-amber-800 dark:text-amber-200 mt-4 mb-3">
                 You guessed today&apos;s word. Come again tomorrow to continue
                 your streak!
               </div>
-              <div className="flex justify-center w-full max-w-xs">
+              <div className="flex justify-center w-full max-w-md">
                 <ShareButton
                   buttonText="Share"
                   cast={{
@@ -584,7 +638,7 @@ export function HomeTab() {
                     bestFriends: true,
                     embeds: [`${APP_URL}/share/${context?.user?.fid || ""}`],
                   }}
-                  className="flex-1"
+                  className="flex-1 border border-amber-300 dark:border-neutral-700 bg-amber-100 hover:bg-amber-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-amber-900 dark:text-amber-200 font-semibold py-2 px-4 rounded-md transition-colors shadow-sm"
                 />
               </div>
             </>
@@ -715,6 +769,93 @@ export function HomeTab() {
           animation: flip 0.6s linear;
           animation-fill-mode: forwards;
           transform-style: preserve-3d;
+        }
+
+        /* Animated W logo colors */
+        @keyframes w-colors {
+          0% {
+            color: #ff66c4;
+          }
+          25% {
+            color: #8e66ff;
+          }
+          50% {
+            color: #66edff;
+          }
+          75% {
+            color: #ff6678;
+          }
+          100% {
+            color: #ff66c4;
+          }
+        }
+        .w-logo {
+          animation: w-colors 6s ease-in-out infinite;
+        }
+
+        /* Dictionary theme additions */
+        .dictionary-bg {
+          background: linear-gradient(180deg, #fef3c7 0%, #fdf6e3 100%);
+        }
+        .dictionary-bg-dark {
+          background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
+        }
+        .dictionary-card {
+          background: #fffaf0;
+        }
+        :global(.dark) .dictionary-card {
+          background: #0b0b0b;
+        }
+        .bg-paper {
+          background-image: repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 23px,
+            rgba(203, 162, 91, 0.25) 24px
+          );
+          position: relative;
+        }
+        .bg-paper::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to right,
+            rgba(59, 7, 0, 0.08),
+            rgba(0, 0, 0, 0)
+          );
+          pointer-events: none;
+        }
+        .bg-paper-dark {
+          background-image: repeating-linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0) 0px,
+            rgba(255, 255, 255, 0) 23px,
+            rgba(255, 255, 255, 0.08) 24px
+          );
+          position: relative;
+        }
+        .bg-paper-dark::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.06),
+            rgba(0, 0, 0, 0)
+          );
+          pointer-events: none;
+        }
+        .tile {
+          box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .shadow-emerald {
+          box-shadow: 0 1px 0 0 rgba(16, 185, 129, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+        }
+        .shadow-amber {
+          box-shadow: 0 1px 0 0 rgba(245, 158, 11, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.08);
         }
       `}</style>
 
