@@ -454,8 +454,8 @@ export function HomeTab() {
       </div>
 
       {/* Scrollable Main Content */}
-      <div className="min-h-screen dictionary-bg dark:dictionary-bg-dark pt-[72px] pb-36">
-        <div className="flex flex-col items-center justify-start p-4">
+      <div className="min-h-screen dictionary-bg dark:dictionary-bg-dark pt-[56px] pb-36">
+        <div className="flex flex-col items-center justify-start p-2">
           {/* Completed Game Popup */}
           {showCompletedPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
