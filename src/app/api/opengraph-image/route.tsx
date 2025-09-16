@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   return new ImageResponse(
     (
-      <div tw="flex h-full w-full flex-col justify-center items-center relative bg-primary">
+      <div tw="flex h-full w-full flex-col justify-center items-center relative bg-[#fef3c7]">
         <div tw="flex w-96 h-96 rounded-full overflow-hidden mb-8 border-8 border-white">
           <img
             src={"https://miniwordle.vercel.app/logo.png"}
@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
           />
         </div>
 
-        <h1 tw="text-8xl text-purple-500">Mini Wordle</h1>
-        <p tw="text-5xl mt-4 text-white opacity-80">
+        <h1 tw="text-8xl text-[#ff6d4d]">Mini Wordle</h1>
+        <p tw="text-5xl mt-4 text-[#ff6d4d] opacity-80">
           Test your vocabulary in 6 tries
         </p>
       </div>
